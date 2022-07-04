@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  dns-server:
+      image: 4km3/dnsmasq
+      container_name: dns-servers
+      restart: always
+      ports:
+        - '54:53/tcp'
+        - '54:53/udp'
+      cap_add:
+        - NET_ADMIN
+      command: --address=/mail.vcslab.org/10.0.0.2 --domain=vcslab.org --mx-host=vcslab.org,mail.vcslab.org,0
+      networks:
+        vpcbr:
+          ipv4_address: 10.0.0.2
+  zimbra_all:
+      image: biennd279/zimbra
+      container_name: zimbra
+      hostname: mail.vcslab.org
+      ports:
+          - '25:25'
+          - '80:80'
+          - '465:465'
+          - '587:587'
+          - '110:110'
+          - '143:143'
+          - '993:993'
+          - '995:995'
+          - '443:443'
+          - '3443:3443'
+          - '9071:9071'
+      dns:
+          - 10.0.0.2
+      volumes:
+          - './zimbra-data:/opt/zimbra:rw'
+      environment:
+          - PASSWORD=Zimbra2022
+          #- LOGSTASH_IP=192.168.100.252 #if you want to push logs to Logstash (optional)
+      networks:
+        vpcbr:
+          ipv4_address: 10.0.0.3
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.0.0.0/24
